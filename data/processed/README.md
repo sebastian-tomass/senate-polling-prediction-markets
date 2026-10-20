@@ -125,3 +125,45 @@ This stage **reproduces the calibration from the 531 already-frozen historical p
 
 It **does not yet regenerate all 531 weighted polling margins from their individual historical poll rows**. That upstream audit replacement is intentionally handled in the later vintage-safe pollster-quality and poll-level weighting implementation stages. No new historical parameters or model variants are fitted here.
 
+## Vintage-safe pollster reliability and quality
+
+This stage reconstructs the frozen **historical pollster-quality histories**, without touching polling aggregation, probabilities, or subsequent evaluation outcomes.
+
+The two inputs are:
+
+- [`historical_reliability_errors.csv`](historical_reliability_errors.csv): **1,005 individually eligible historical Senate poll errors**, across 2006–2022, with frozen conducting (`reliability_pollster`) identities, poll and certified Democratic-minus-Republican margins, signed and absolute errors, election cycle and original source/provenance fields. These come from the **`Reliability Error Inputs`** sheet stored as JSONL row chunks in the internal workbook’s `Archived Source Sheets` tab. The CSV retains `archived_excel_row` to locate every source record.
+- [`historical_quality_reference.csv`](historical_quality_reference.csv): all **2,729 frozen pollster × forecast-vintage lookup keys** and full-precision reference statistics, from `Pollster Quality Weight Audit` (the frozen p=2 calculation sheet). This is used **only to identify the frozen lookup universe and to check** the independently recomputed values, not to obtain prior MAEs or multipliers used in reconstruction. The CSV retains `audit_excel_row`.
+
+The analysis underlying the inputs is in the internal `Polymarket_Full_Master_2006_2020_V2_Final_Results_Summary.xlsx` workbook. That large audit workbook is deliberately not tracked in Git.
+
+### Frozen selection and source scope
+
+The **1,005 already-eligible error observations** are the vetted reliability-error universe, not all historical raw poll rows. Eligibility, joint-poll decomposition and canonical-to-conducting identity decisions were established in the frozen audit; no new poll selection or pollster-alias inference occurs in this stage. The public source does not yet independently reconstruct reliability eligibility from the entire raw polling archive; the poll-level input/weighting pipeline is planned separately.
+
+Cycle counts in the reliability-error input: 2006: 100; 2008: 120; 2010: 106; 2012: 118; 2014: 143; 2016: 118; 2018: 105; 2020: 84; 2022: 111. Historical poll rows trace to the [pinned Senate archive](https://github.com/Jack-Whitcomb/All-US-Senate-polls-2006-2024/blob/5aea8c5c4572ddc71f4491fa84478e70d88a5898/2006_to_2024_senate_polls.csv) at commit `5aea8c5c4572ddc71f4491fa84478e70d88a5898`; certified result links are recorded by row.
+
+### Reproduce
+
+```bash
+python src/reconstruct_pollster_quality.py
+python src/reconstruct_pollster_quality.py --csv outputs/tables/pollster_quality.csv
+python -m unittest discover -s tests -v
+```
+
+The reconstruction derives `absolute_error = |actual_margin - poll_margin|` from stored polling and election margins, validating the frozen error fields. For each forecast vintage `t` and resolved conducting pollster `j`, it uses **only poll-error records with `cycle < t`** to compute `n_prior_polls`, `raw_prior_MAE_j`, and the global mean absolute error of **all eligible prior polls**. No poll released or conducted in cycle `t` contributes to its own vintage.
+
+```text
+shrunk_MAE_j(t) = (n_j / (n_j + 18)) * raw_prior_MAE_j
+                + (18 / (n_j + 18)) * prior_global_MAE(t)
+q_j(t) = (prior_global_MAE(t) / shrunk_MAE_j(t)) ^ 2
+```
+
+The 2006 vintage has **no prior universe** (global MAE and shrunk MAE are blank; every q = 1). In later vintages, genuinely no-history pollsters retain blank raw MAE, use shrunk MAE equal to the contemporary global MAE and have **q = 1**. No clipping/clamping or post-2022 election outcomes are used.
+
+- Forecast vintages: 2006, 2008, 2010, 2012, 2014, 2016, 2018, 2020, 2022 and 2024.
+- Frozen lookup universe: **272 entries per vintage** through 2022, then **281** for 2024, total **2,729**.
+- For 2022 forecasts, the history ends in **2020**: 894 prior eligible polls; global MAE `4.509642792245872`.
+- For 2024 forecasts, history ends in **2022**: 1,005 prior eligible polls; global MAE `4.457949518496256`.
+- Every frozen n, raw MAE, global MAE, shrunk MAE, q and vintage flag is independently checked against the authoritative reference at absolute tolerance **1e-12**. Largest observed numerical difference: about `3.55e-15`.
+
+The produced `outputs/tables/pollster_quality.csv` is the **computed** vintage-safe quality table for later poll-level weighting. It is not a new fitted model or a replacement for the underlying archived identity audit. No 2024 election outcomes were used to determine 2024 quality multipliers.
