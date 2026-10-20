@@ -45,6 +45,18 @@ However, uncertainty is substantial. A 50,000-replicate whole-race clustered boo
 
 Both intervals include zero, so the magnitude—and even sign—of the aggregate advantage is estimated imprecisely.
 
+## Reproduce vintage-safe pollster quality
+
+The [frozen historical poll-level error inputs](data/processed/historical_reliability_errors.csv) and [quality reconstruction script](src/reconstruct_pollster_quality.py) reproduce prior-cycle pollster MAE histories, fixed `K=18` shrinkage, and the squared reliability multipliers with **no clamping**. Each forecast vintage uses only **earlier election cycles**.
+
+```bash
+python src/reconstruct_pollster_quality.py
+python src/reconstruct_pollster_quality.py --csv outputs/tables/pollster_quality.csv
+python -m unittest discover -s tests -v
+```
+
+The 1,005 frozen eligible reliability-error records reproduce all **2,729 pollster–vintage audit entries**, including the 2022/2024 vintages, within `1e-12`. A missing history receives `q=1`. See the [quality-source provenance and stage boundary](data/processed/README.md#vintage-safe-pollster-reliability-and-quality). The later poll-level pipeline will independently rebuild the polling signal weights using these multipliers.
+
 ## Reproduce historical polling calibration (2006–2020)
 
 The [531 frozen historical polling signals](data/processed/2006_2020_polling_signals.csv) and [calibration script](src/calibrate_polling_2006_2020.py) reproduce the **527-observation PRIMARY** polling-error calibration, with Georgia 2008 runoff records excluded:
