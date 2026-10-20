@@ -45,6 +45,17 @@ However, uncertainty is substantial. A 50,000-replicate whole-race clustered boo
 
 Both intervals include zero, so the magnitude—and even sign—of the aggregate advantage is estimated imprecisely.
 
+## Reproduce historical polling calibration (2006–2020)
+
+The [531 frozen historical polling signals](data/processed/2006_2020_polling_signals.csv) and [calibration script](src/calibrate_polling_2006_2020.py) reproduce the **527-observation PRIMARY** polling-error calibration, with Georgia 2008 runoff records excluded:
+
+```bash
+python src/calibrate_polling_2006_2020.py
+python -m unittest discover -s tests -v
+```
+
+The script independently calculates horizon-specific historical-error means and sample standard deviations (60, 30, 14 and 7 days) from the frozen margins and certified outcomes, then regression-checks them against the audit. See the [historical data lineage and stage boundary](data/processed/README.md#20062020-historical-polling-calibration). Reproducing those weighted signal margins upstream from individual historical poll records is a separate planned pipeline stage.
+
 ## Reproduce the 2022 development fit
 
 The [34-observation 2022 development dataset](data/processed/2022_common_support.csv) and [hybrid-fit script](src/fit_hybrid_2022.py) reproduce how the single global convex-combination weight was obtained. Georgia's post-general-runoff robustness observations are excluded, and each of the four horizons contributes exactly 25% of the Brier fitting objective.
