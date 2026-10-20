@@ -73,3 +73,55 @@ python -m unittest discover -s tests -v
 The script calculates the **unconstrained quadratic optimum** of the 34-observation equal-horizon Brier objective (each horizon receives 25%), then imposes `0 <= w <= 1` on the **single global weight**. It reports horizon-by-horizon, equal-horizon and pooled Brier and log-loss diagnostics, but **log loss is not an optimization objective**. All outputs are checked against frozen workbook values (tolerance `1e-12`). No re-estimation of pollster quality, historical calibration, polling or market probabilities takes place.
 
 The original V1 project comparison is distinct from the later locked-spec retrospective extension; this 2022 development reproduction uses the **final polling model**. The finalized approach is intended to be tested prospectively in 2026; 2024 is retrospective, not pristine untouched validation.
+
+## 2006–2020 historical polling calibration
+
+[`2006_2020_polling_signals.csv`](2006_2020_polling_signals.csv) is a **full-precision, 531-row frozen signal-level extract** from the internal `Polymarket_Full_Master_2006_2020_V2_Final_Results_Summary.xlsx`. It contains one pre-election Senate race × horizon polling signal per row, its certified Democratic-minus-Republican election margin, fixed PRIMARY/runoff classification, source metadata, and original workbook row locators. **The large audit workbook is not committed.**
+
+**Source worksheets:**
+
+- `V2 P2 All Signals 2006-2020` (Excel rows 2–532): frozen final quality-weighted polling margins, poll counts, weighted totals, horizon/cutoff and signal-source pointers.
+- `V2 P2 Historical Polling Errors` (rows 2–532): the exact 531-to-531 outcome merge, certified outcome margin, FEC provenance and PRIMARY versus procedural-runoff status.
+- `V2 P2 Polling Error Parameters` (rows 8–11): frozen benchmark values for the regression tests; **not used to estimate** the parameters.
+
+The source's `PRIMARY_V1_1` and `POST_GE_RUNOFF_ROBUSTNESS` strings are original internal audit status identifiers. They are carried through unchanged for source reconciliation, not separate public-facing forecasting models.
+
+| Historical cycle | Signal count |
+| --- | ---: |
+| 2006 | 33 |
+| 2008 | 69 |
+| 2010 | 70 |
+| 2012 | 79 |
+| 2014 | 98 |
+| 2016 | 69 |
+| 2018 | 70 |
+| 2020 | 43 |
+| **Total** | **531** |
+
+**Calibration sample:** 527 PRIMARY signals (60d: 93; 30d: 133; 14d: 150; 7d: 151). The four additional `2008-georgia-{60,30,14,7}d` signals are **post-general runoff robustness only** and do not contribute to any parameter estimate.
+
+For horizon `h`, compute the historical error as:
+
+```text
+error(i,h) = certified_D_minus_R_margin(i) - frozen_poll_D_minus_R_margin(i,h)
+
+mu_h = arithmetic_mean(PRIMARY errors at horizon h)
+sigma_h = sample_standard_deviation(PRIMARY errors at horizon h, ddof=1)
+```
+
+No race or horizon receives any additional observation weight. The script also reports mean absolute error as an audit diagnostic. The four frozen calibration pairs are verified against the historical workbook to absolute tolerance `1e-12`.
+
+**Signal origins:** the [Jack-Whitcomb Senate polling archive](https://github.com/Jack-Whitcomb/All-US-Senate-polls-2006-2024/blob/5aea8c5c4572ddc71f4491fa84478e70d88a5898/2006_to_2024_senate_polls.csv), pinned commit `5aea8c5c4572ddc71f4491fa84478e70d88a5898`. Source polling labels and historical aggregation were frozen in the original audit before joining election outcomes. **Certified outcome origins:** FEC *Federal Elections* for 2006, 2008, 2010, 2012, 2014, 2016, 2018 and 2020. Per-signal FEC source links appear in `outcome_source_url`; the vote-margin denominator is all valid votes cast, not a two-party denominator.
+
+### Reproduce the historical calibration
+
+```bash
+python src/calibrate_polling_2006_2020.py
+python src/calibrate_polling_2006_2020.py --csv outputs/tables/historical_calibration.csv
+python -m unittest discover -s tests -v
+```
+
+This stage **reproduces the calibration from the 531 already-frozen historical polling signals**. It independently reconstructs the 527 PRIMARY historical errors, horizon-specific means, sample standard deviations, and MAEs. It also checks the source record counts and stored error arithmetic.
+
+It **does not yet regenerate all 531 weighted polling margins from their individual historical poll rows**. That upstream audit replacement is intentionally handled in the later vintage-safe pollster-quality and poll-level weighting implementation stages. No new historical parameters or model variants are fitted here.
+
