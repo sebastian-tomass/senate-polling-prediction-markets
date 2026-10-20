@@ -45,6 +45,18 @@ However, uncertainty is substantial. A 50,000-replicate whole-race clustered boo
 
 Both intervals include zero, so the magnitude—and even sign—of the aggregate advantage is estimated imprecisely.
 
+## Reproduce the 2022 development fit
+
+The [34-observation 2022 development dataset](data/processed/2022_common_support.csv) and [hybrid-fit script](src/fit_hybrid_2022.py) reproduce how the single global convex-combination weight was obtained. Georgia's post-general-runoff robustness observations are excluded, and each of the four horizons contributes exactly 25% of the Brier fitting objective.
+
+```bash
+python -m pip install -r requirements.txt
+python src/fit_hybrid_2022.py
+python -m unittest discover -s tests -v
+```
+
+The unconstrained polling weight is **−0.337005**; applying the frozen 0–1 constraint gives **w = 0**, so the frozen ensemble equals the market. The script also reproduces the horizon-specific and equal-horizon polling/market Brier and log-loss results without recalculating input forecasts. See the [2022 data provenance notes](data/processed/README.md#2022-development-common-support-data).
+
 ## Reproduce the 2024 results
 
 The [processed common-support dataset](data/processed/2024_common_support.csv) and [evaluation script](src/evaluate_2024.py) reproduce the headline Brier scores, log losses, and 50,000-draw race-cluster bootstrap directly from the frozen forecast observations:
