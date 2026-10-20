@@ -1,0 +1,6 @@
+# Initial analysis stack; versions will be pinned when the reproducible pipeline is added.
+numpy
+pandas
+scipy
+matplotlib
+openpyxl
