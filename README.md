@@ -45,6 +45,27 @@ However, uncertainty is substantial. A 50,000-replicate whole-race clustered boo
 
 Both intervals include zero, so the magnitude—and even sign—of the aggregate advantage is estimated imprecisely.
 
+## Run the complete reproduction
+
+The final pipeline connects every analytical stage and creates the presentation tables and figures:
+
+```bash
+python -m pip install -r requirements.txt
+python src/run_pipeline.py
+```
+
+The default command is deterministic and offline. It reconstructs all polling inputs from the committed poll rows, repeats the 2022 fit and 2024 scoring/bootstrap, verifies every frozen result, and writes the generated artifacts under `outputs/`. The market probabilities in the committed common-support tables were independently rebuilt in the preceding market-provenance stage.
+
+To reacquire and reprocess the checksum-pinned raw market archives in the same run:
+
+```bash
+python src/run_pipeline.py --rebuild-markets
+```
+
+Neither upstream market source contains a license file, so raw files are verified in the gitignored cache and are not redistributed. See the [final results and reproducibility guide](docs/results.md) and [generated-output inventory](outputs/README.md).
+
+GitHub Actions runs the full regression suite and the offline end-to-end command on every push and pull request, then retains the generated tables and figures as a workflow artifact.
+
 ## Reproduce the 2022 and 2024 polling forecasts
 
 The [polling-forecast pipeline](src/generate_polling_forecasts.py) now connects the upstream reconstruction stages: it rebuilds poll-level weights and race–horizon margins, substitutes those rebuilt 2006–2020 margins into the historical calibration, and converts the 2022/2024 margins into Democratic win probabilities:
@@ -206,20 +227,24 @@ Freeze the methodology before the 2026 Senate election and evaluate it prospecti
 
 ## Repository status
 
-The statistical analysis is complete. This repository is being converted from an extensive audit workbook into a cleaner reproducible research pipeline.
+The retrospective statistical analysis and its six-step GitHub implementation are complete. The repository now reproduces the frozen 2006–2024 workflow from poll rows through calibration, forecasts, hybrid fitting, scoring, clustered inference, tables, and figures.
 
-Planned repository components include:
+Implemented components include:
 
 - processed modeling datasets;
-- scripts for polling aggregation, calibration, market processing, and scoring;
+- scripts for polling aggregation, calibration, market processing, hybrid fitting, and scoring;
+- one end-to-end reproduction command;
 - reproducible tables and figures;
 - methodology and data-provenance documentation;
-- the frozen 2026 prospective forecasting pipeline.
+- automated regression tests and continuous integration.
+
+The next research stage is to freeze and run the prospective 2026 forecasting application before observing its election outcomes.
 
 ## Repository structure
 
 ```text
 .
+├── .github/workflows/ci.yml
 ├── README.md
 ├── data/
 │   ├── raw/
@@ -229,15 +254,20 @@ Planned repository components include:
 │       └── README.md
 ├── docs/
 │   ├── data_sources.md
-│   └── methodology.md
+│   ├── methodology.md
+│   └── results.md
 ├── notebooks/
 │   └── README.md
 ├── outputs/
+│   ├── README.md
 │   ├── figures/
 │   └── tables/
 ├── src/
 │   ├── README.md
-│   └── reconstruct_market_probabilities.py
+│   ├── build_presentation.py
+│   ├── run_pipeline.py
+│   └── stage-specific modules
+├── tests/
 └── archive/
     └── README.md
 ```
