@@ -167,3 +167,63 @@ The 2006 vintage has **no prior universe** (global MAE and shrunk MAE are blank;
 - Every frozen n, raw MAE, global MAE, shrunk MAE, q and vintage flag is independently checked against the authoritative reference at absolute tolerance **1e-12**. Largest observed numerical difference: about `3.55e-15`.
 
 The produced `outputs/tables/pollster_quality.csv` is the **computed** vintage-safe quality table for later poll-level weighting. It is not a new fitted model or a replacement for the underlying archived identity audit. No 2024 election outcomes were used to determine 2024 quality multipliers.
+
+## Poll-level weighting pipeline (frozen 2006–2024)
+
+This stage reconstructs the final **quality-weighted polling signal** from frozen, eligible individual poll usages; it does not refit models, score elections, or change any eligibility rule.
+
+### Inputs and traceability
+
+- [`poll_usages_2006_2012.csv`](poll_usages_2006_2012.csv): **3,108** uses of polls in 2006–2012 Senate forecasts, exported from the original `Poll Usage Weights 2006-2020` audit sheet (original rows retained).
+- [`poll_usages_2014_2020.csv`](poll_usages_2014_2020.csv): **2,902** uses in 2014–2020 from the same audit sheet. Together the historical inputs comprise **6,010 usages**.
+- [`poll_usages_2022.csv`](poll_usages_2022.csv): **469** uses from the frozen `V1 2022 Row Weights` and the exact resolved identities from `V2 P2 2022 Row Weights`.
+- [`poll_usages_2024.csv`](poll_usages_2024.csv): **867** uses from frozen `V1 2024 Row Weights` and `V2 P2 2024 Row Weights`.
+- [`pollster_identity_2022_2024.csv`](pollster_identity_2022_2024.csv): documentary raw-label fielding crosswalk, limited to the **64** labels actually used in 2022 and **70** actually used in 2024. The earlier 2022 identity lookup has 67 listed labels, of which three are outside the frozen selected-usage universe; this export includes only actual usages.
+- [`polling_signal_reference_2006_2024.csv`](polling_signal_reference_2006_2024.csv): **629** frozen race×horizon aggregation benchmarks; reference values are used for validation only, never as inputs to reconstructed weights or margins.
+- Existing Step 2: [`historical_reliability_errors.csv`](historical_reliability_errors.csv), [`historical_quality_reference.csv`](historical_quality_reference.csv), and [`src/reconstruct_pollster_quality.py`](../../src/reconstruct_pollster_quality.py). Historical quality multipliers are *recomputed* from prior-election errors, not loaded from the stored row-weight outputs.
+
+The single internal provenance workbook is `Polymarket_Full_Master_2006_2020_V2_Final_Results_Summary.xlsx` (40 worksheets). The source sheet names above refer to that file. Its large size is why it is excluded from Git; each exported usage preserves its original source file/row, source identifier, field dates, raw and original canonical pollster labels, reliability identity, poll margin and source Excel row. Full-precision frozen row weights and signal metrics appear only as **regression-test reference columns**; the algorithm cannot use them to calculate its outputs.
+
+### Frozen row weight (no new weighting choices)
+
+For a poll usage in a specific race×horizon `h`, let:
+
+- `age = (cutoff - start date) - (end date - start date) / 2` in days. This preserves half-day median-field precision, using the *recorded* dates without any source repair.
+- `w_recency = 2 ** (-age / (14 + 0.2*h))`.
+- `effective_n = min(reported_sample_size, 5000)`, with missing `n` replaced by `600`.
+- `w_sample = sqrt(effective_n / 600)`.
+- `bin = floor(age / 14)`; group **within the race×horizon signal** by `(original_v1_canonical_pollster, bin)` and set `w_repeat = 1 / number_of_eligible_polls_in_this_bin`. **The later reliability identity must not be used for these bins.**
+- `w_partisan = 1`, `w_v1_quality = 1`.
+- `v1_poll_weight = w_recency * w_sample * w_repeat`.
+- `v2_p2_poll_weight = v1_poll_weight * q`, where `q` is the exact frozen forecast-vintage multiplier reconstructed by Step 2. For documentary **CONFIRMED_NO_HISTORY** identities absent from its key universe, `q=1` only after confirming no prior eligible errors under that exact identity. No fuzzy or heuristic fielding-identity matching is used.
+
+The output polling margin is `sum(w * (dem - rep)) / sum(w)`; the maximum single-poll weight share is `max(w) / sum(w)`. All computations are independently checked against the frozen row weights and signal benchmark values.
+
+### Known reversed-date source rows
+
+The original frozen universe includes a handful of **internally reversed fielding-date records**. The script retains the recorded values rather than silently correcting or dropping them. There are **10 affected poll usages**, covering four distinct source records:
+
+| Source | Original source row | Affected signals |
+| --- | ---: | --- |
+| `2016_senate_polls.csv` | 31 | Utah 60d, 14d, 7d |
+| `2020_senate_polls.csv` | 117 | Maine 30d, 14d, 7d |
+| `2022_senate_polls.csv` | 181 | Iowa 14d, 7d |
+| `2024_senate_polls.csv` | 5 | Arizona 14d, 7d |
+
+The two 2024 Arizona usages retain their **previously identified and sensitivity-tested** `source_data_anomaly=True` flag. The earlier eight usages are additionally reported by `source_date_reversal_detected=True`, without retroactively changing the original anomaly classifications. The script rejects any new, unaccounted-for reversed-date record. No anomaly-exclusion sensitivity is run here.
+
+### Reproduction and scope
+
+Run from the repository root:
+
+```bash
+python src/reconstruct_poll_weights.py
+python src/reconstruct_poll_weights.py \
+  --rows-csv outputs/tables/rebuilt_poll_weights.csv \
+  --signals-csv outputs/tables/rebuilt_polling_signals.csv
+python -m unittest discover -s tests -v
+```
+
+Full-source outputs are not committed to `outputs/` and can be regenerated locally. Run time is typically under a few seconds. The reconstruction reproduces **7,346 poll usages** and **629 polling signals**: 531 historical, 38 development (2022), and 60 retrospective evaluation (2024). Maximum absolute difference from a frozen aggregate weighted margin is approximately `1.42e-14`; every row-level stored V1 and quality-weighted p=2 weight also reconciles to `1e-10`.
+
+This stage **does not reconstruct polling-archive eligibility filtering or independently redo the documentary pollster-identity investigations**. Those are deliberately held fixed to preserve the retrospective experiment. Step 4 can now recompute 2022/2024 polling probabilities from the regenerated signal margins and the already-frozen historical calibration parameters. The 2024 comparison is retrospective, and 2026 remains the prospective test.

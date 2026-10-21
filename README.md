@@ -45,6 +45,20 @@ However, uncertainty is substantial. A 50,000-replicate whole-race clustered boo
 
 Both intervals include zero, so the magnitude—and even sign—of the aggregate advantage is estimated imprecisely.
 
+## Reproduce poll-level weighting and polling margins
+
+The [frozen eligible poll usages](data/processed/README.md#poll-level-weighting-pipeline-frozen-20062024) and [poll-level weighting script](src/reconstruct_poll_weights.py) reconstruct the final weighted Democratic-minus-Republican Senate polling margins across **2006–2024**:
+
+```bash
+python src/reconstruct_poll_weights.py
+python src/reconstruct_poll_weights.py \
+  --rows-csv outputs/tables/rebuilt_poll_weights.csv \
+  --signals-csv outputs/tables/rebuilt_polling_signals.csv
+python -m unittest discover -s tests -v
+```
+
+The script regenerates **7,346 poll-usage weights** and **629 race×horizon signals** using the frozen recency, sample-size and original-pollster repeat-bin rules, then applies the vintage-safe quality multipliers computed by the preceding quality module. The recreated margins and weight totals match all frozen audit reference values to floating-point precision. **Eligibility and documented pollster identity mappings are fixed inputs**; poll inclusion is not reconsidered here. Known reversed-date source records are retained and explicitly documented.
+
 ## Reproduce vintage-safe pollster quality
 
 The [frozen historical poll-level error inputs](data/processed/historical_reliability_errors.csv) and [quality reconstruction script](src/reconstruct_pollster_quality.py) reproduce prior-cycle pollster MAE histories, fixed `K=18` shrinkage, and the squared reliability multipliers with **no clamping**. Each forecast vintage uses only **earlier election cycles**.
