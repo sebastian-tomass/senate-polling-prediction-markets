@@ -256,3 +256,37 @@ python -m unittest discover -s tests -v
 ```
 
 Generated tables are gitignored and can be recreated on demand. This stage leaves the 2022 hybrid fitting rule and the 2024 evaluation unchanged.
+
+## Prediction-market source reconstruction
+
+[`reconstruct_market_probabilities.py`](../../src/reconstruct_market_probabilities.py) rebuilds the market probabilities that feed the 2022 development fit and 2024 retrospective evaluation. The calculation starts from upstream raw bytes, not from the committed `p_market_dem` columns. Those columns are read only after reconstruction as regression-test targets.
+
+The machine-readable source manifest is [`data/raw/market_sources.json`](../raw/market_sources.json). It pins repository commits, file paths and Git blob SHAs. Raw upstream files are downloaded to a gitignored cache or supplied from local pinned checkouts; they are not redistributed in this repository because neither pinned source tree contains a license file.
+
+### 2022 trade-level rule
+
+The script verifies and parses ten state-specific CSVs containing **6,779 trades** in total. For each of the 34 PRIMARY targets:
+
+1. construct 12:00:00 UTC on the stored cutoff date;
+2. interpret the source's timezone-naive `Timestamp` as UTC under the frozen convention;
+3. select the latest trade at or before the target;
+4. if several rows share that timestamp, retain the first physical source row;
+5. set `p_market_dem = price` for a Democratic contract and `1 - price` for a Republican contract.
+
+The original scraper/session timezone remains unresolved. The convention is preserved and disclosed rather than relabeled as verified UTC. Georgia's four post-general-runoff observations are not in the committed PRIMARY common-support market sample and are not reconstructed by this stage.
+
+### 2024 archived CLOB rule
+
+The script verifies the single 2024 JSON blob, validates **13,966 observations across 33 states**, and selects the price-history point nearest each scheduled noon UTC target. A point more than 60 seconds from the target is rejected instead of silently substituting an adjacent 12-hour observation. All 60 frozen selections are 2 or 3 seconds after their target. No interpolation or smoothing is performed.
+
+### Run and verify
+
+```bash
+python src/reconstruct_market_probabilities.py
+python src/reconstruct_market_probabilities.py \
+  --csv outputs/tables/rebuilt_market_probabilities.csv \
+  --json outputs/tables/rebuilt_market_probabilities_audit.json
+python -m unittest discover -s tests -v
+```
+
+The reconstruction checks **94 observations**. The maximum absolute difference from the committed market probabilities is about `5.55e-17` for 2022 and exactly `0` for 2024. The 2024 observed timestamps also match exactly.
