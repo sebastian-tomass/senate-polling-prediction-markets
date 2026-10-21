@@ -6,6 +6,7 @@ The final reproducible pipeline will be organized into small modules for:
 - vintage-safe pollster reliability;
 - poll weighting and aggregation;
 - historical polling-error calibration;
+- polling probability generation;
 - prediction-market processing;
 - 2022 hybrid fitting;
 - 2024 evaluation and clustered bootstrap inference;

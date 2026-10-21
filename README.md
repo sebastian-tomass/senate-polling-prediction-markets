@@ -45,6 +45,19 @@ However, uncertainty is substantial. A 50,000-replicate whole-race clustered boo
 
 Both intervals include zero, so the magnitude—and even sign—of the aggregate advantage is estimated imprecisely.
 
+## Reproduce the 2022 and 2024 polling forecasts
+
+The [polling-forecast pipeline](src/generate_polling_forecasts.py) now connects the upstream reconstruction stages: it rebuilds poll-level weights and race–horizon margins, substitutes those rebuilt 2006–2020 margins into the historical calibration, and converts the 2022/2024 margins into Democratic win probabilities:
+
+```bash
+python src/generate_polling_forecasts.py
+python src/generate_polling_forecasts.py \
+  --csv outputs/tables/rebuilt_polling_forecasts.csv
+python -m unittest discover -s tests -v
+```
+
+The script generates **98 forecasts**: 38 for 2022 and 60 for 2024. The four Georgia 2022 post-general-runoff observations remain robustness-only, leaving the original 34-row PRIMARY development sample unchanged. All 94 committed common-support probabilities match the independently regenerated values to floating-point precision, as do the committed 2024 margins. Market prices and 2022/2024 outcomes are not used to construct any polling forecast.
+
 ## Reproduce poll-level weighting and polling margins
 
 The [frozen eligible poll usages](data/processed/README.md#poll-level-weighting-pipeline-frozen-20062024) and [poll-level weighting script](src/reconstruct_poll_weights.py) reconstruct the final weighted Democratic-minus-Republican Senate polling margins across **2006–2024**:
@@ -80,7 +93,7 @@ python src/calibrate_polling_2006_2020.py
 python -m unittest discover -s tests -v
 ```
 
-The script independently calculates horizon-specific historical-error means and sample standard deviations (60, 30, 14 and 7 days) from the frozen margins and certified outcomes, then regression-checks them against the audit. See the [historical data lineage and stage boundary](data/processed/README.md#20062020-historical-polling-calibration). Reproducing those weighted signal margins upstream from individual historical poll records is a separate planned pipeline stage.
+The script independently calculates horizon-specific historical-error means and sample standard deviations (60, 30, 14 and 7 days) from the frozen margins and certified outcomes, then regression-checks them against the audit. The downstream polling-forecast pipeline additionally substitutes the Step 3 poll-level reconstructions for those historical margins before recalibrating. See the [historical data lineage and stage boundary](data/processed/README.md#20062020-historical-polling-calibration).
 
 ## Reproduce the 2022 development fit
 

@@ -123,7 +123,7 @@ python -m unittest discover -s tests -v
 
 This stage **reproduces the calibration from the 531 already-frozen historical polling signals**. It independently reconstructs the 527 PRIMARY historical errors, horizon-specific means, sample standard deviations, and MAEs. It also checks the source record counts and stored error arithmetic.
 
-It **does not yet regenerate all 531 weighted polling margins from their individual historical poll rows**. That upstream audit replacement is intentionally handled in the later vintage-safe pollster-quality and poll-level weighting implementation stages. No new historical parameters or model variants are fitted here.
+The standalone calibration script begins with the 531 frozen signal rows. The later poll-level weighting stage now reconstructs all 531 margins, and `generate_polling_forecasts.py` substitutes those independently rebuilt margins before estimating the same calibration. No new historical parameters or model variants are fitted.
 
 ## Vintage-safe pollster reliability and quality
 
@@ -226,4 +226,33 @@ python -m unittest discover -s tests -v
 
 Full-source outputs are not committed to `outputs/` and can be regenerated locally. Run time is typically under a few seconds. The reconstruction reproduces **7,346 poll usages** and **629 polling signals**: 531 historical, 38 development (2022), and 60 retrospective evaluation (2024). Maximum absolute difference from a frozen aggregate weighted margin is approximately `1.42e-14`; every row-level stored V1 and quality-weighted p=2 weight also reconciles to `1e-10`.
 
-This stage **does not reconstruct polling-archive eligibility filtering or independently redo the documentary pollster-identity investigations**. Those are deliberately held fixed to preserve the retrospective experiment. Step 4 can now recompute 2022/2024 polling probabilities from the regenerated signal margins and the already-frozen historical calibration parameters. The 2024 comparison is retrospective, and 2026 remains the prospective test.
+This stage **does not reconstruct polling-archive eligibility filtering or independently redo the documentary pollster-identity investigations**. Those are deliberately held fixed to preserve the retrospective experiment. The downstream forecasting stage uses these regenerated margins to recompute the historical calibration and the 2022/2024 polling probabilities. The 2024 comparison is retrospective, and 2026 remains the prospective test.
+
+## 2022 and 2024 polling forecasts from poll rows
+
+[`generate_polling_forecasts.py`](../../src/generate_polling_forecasts.py) links the first three reconstruction stages into the final polling forecasts. It does not load a stored polling margin or probability as a model input.
+
+1. Rebuild all 7,346 poll-usage weights and 629 race×horizon margins.
+2. Join the 531 reconstructed 2006–2020 margins to the already-frozen certified outcomes and PRIMARY/runoff classifications.
+3. Re-estimate the four horizon-specific error means and sample standard deviations from the 527 PRIMARY observations.
+4. For each reconstructed 2022 and 2024 margin, calculate:
+
+```text
+z(i,h) = (polling_margin(i,h) + mu_h) / sigma_h
+p_poll_dem(i,h) = Phi(z(i,h))
+p_poll_rep(i,h) = 1 - p_poll_dem(i,h)
+```
+
+The output contains **98 polling forecasts**: 38 for 2022 and 60 for 2024. The four `2022-georgia-{60,30,14,7}d` rows are generated and labeled `POST_GENERAL_RUNOFF_ROBUSTNESS`, but are not allowed into the 34-row PRIMARY development fit. The 2024 Arizona anomaly flags are propagated from the poll-level records without repairing or excluding the frozen source rows.
+
+After generation, the script regression-checks the 34 PRIMARY 2022 probabilities against `2022_common_support.csv` and all 60 2024 probabilities and margins against `2024_common_support.csv`. The four Georgia robustness forecasts have no committed common-support reference because the frozen PRIMARY development extract excludes them. Frozen reference columns and common-support outputs are used only after generation for validation. Neither market probabilities nor 2022/2024 election outcomes enter the polling forecast calculation.
+
+```bash
+python src/generate_polling_forecasts.py
+python src/generate_polling_forecasts.py \
+  --csv outputs/tables/rebuilt_polling_forecasts.csv \
+  --json outputs/tables/rebuilt_polling_forecasts_audit.json
+python -m unittest discover -s tests -v
+```
+
+Generated tables are gitignored and can be recreated on demand. This stage leaves the 2022 hybrid fitting rule and the 2024 evaluation unchanged.
