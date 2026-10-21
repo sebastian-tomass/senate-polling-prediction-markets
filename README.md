@@ -57,7 +57,7 @@ python src/reconstruct_poll_weights.py \
 python -m unittest discover -s tests -v
 ```
 
-The script regenerates **7,346 poll-usage weights** and **629 race×horizon signals** using frozen V1 recency, sample-size and original-canonical-pollster repeat bins, then applies the vintage-safe quality multipliers computed by the preceding quality module. The recreated margins and weight totals match all frozen audit reference values to floating-point precision. **Eligibility and documented pollster identity mappings are fixed inputs**; poll inclusion is not reconsidered here. Known reversed-date source records are retained and explicitly documented.
+The script regenerates **7,346 poll-usage weights** and **629 race×horizon signals** using the frozen recency, sample-size and original-pollster repeat-bin rules, then applies the vintage-safe quality multipliers computed by the preceding quality module. The recreated margins and weight totals match all frozen audit reference values to floating-point precision. **Eligibility and documented pollster identity mappings are fixed inputs**; poll inclusion is not reconsidered here. Known reversed-date source records are retained and explicitly documented.
 
 ## Reproduce vintage-safe pollster quality
 
