@@ -58,6 +58,26 @@ python -m unittest discover -s tests -v
 
 The script generates **98 forecasts**: 38 for 2022 and 60 for 2024. The four Georgia 2022 post-general-runoff observations remain robustness-only, leaving the original 34-row PRIMARY development sample unchanged. All 94 committed common-support probabilities match the independently regenerated values to floating-point precision, as do the committed 2024 margins. Market prices and 2022/2024 outcomes are not used to construct any polling forecast.
 
+## Reproduce the prediction-market probabilities
+
+The [market-source manifest](data/raw/market_sources.json) and [market reconstruction script](src/reconstruct_market_probabilities.py) rebuild the market side of the same **94 PRIMARY common-support observations** from checksum-pinned upstream archives:
+
+```bash
+python src/reconstruct_market_probabilities.py
+python src/reconstruct_market_probabilities.py \
+  --csv outputs/tables/rebuilt_market_probabilities.csv \
+  --json outputs/tables/rebuilt_market_probabilities_audit.json
+```
+
+The first run retrieves ten 2022 trade CSVs and one 2024 CLOB-history JSON file into the gitignored `.cache/market_sources/` directory. Every file must match its pinned Git blob SHA before parsing.
+
+- **2022:** parse 6,779 archived trades, treat the source's timezone-naive timestamps as UTC, choose the last trade at or before each noon UTC target, break timestamp ties by first source row, and convert contract-side prices to Democratic probabilities.
+- **2024:** validate all 13,966 points in the 33-state archived CLOB response, then select the point nearest each scheduled noon UTC grid target. Every selected point is 2 or 3 seconds after the target and within the fail-closed 60-second tolerance.
+
+The 34 reconstructed 2022 probabilities and 60 reconstructed 2024 probabilities match the committed common-support values within floating-point precision. Georgia's four 2022 runoff observations remain outside the PRIMARY development market sample.
+
+Neither pinned upstream source tree contains a license file. The repository therefore includes retrieval metadata and transformations but does not redistribute the raw archives. See the [raw-source retrieval and redistribution note](data/raw/README.md), including offline local-checkout instructions.
+
 ## Reproduce poll-level weighting and polling margins
 
 The [frozen eligible poll usages](data/processed/README.md#poll-level-weighting-pipeline-frozen-20062024) and [poll-level weighting script](src/reconstruct_poll_weights.py) reconstruct the final weighted Democratic-minus-Republican Senate polling margins across **2006–2024**:
@@ -202,7 +222,11 @@ Planned repository components include:
 .
 ├── README.md
 ├── data/
-│   └── README.md
+│   ├── raw/
+│   │   ├── README.md
+│   │   └── market_sources.json
+│   └── processed/
+│       └── README.md
 ├── docs/
 │   ├── data_sources.md
 │   └── methodology.md
@@ -212,7 +236,8 @@ Planned repository components include:
 │   ├── figures/
 │   └── tables/
 ├── src/
-│   └── README.md
+│   ├── README.md
+│   └── reconstruct_market_probabilities.py
 └── archive/
     └── README.md
 ```

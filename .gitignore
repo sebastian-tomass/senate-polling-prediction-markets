@@ -17,6 +17,7 @@ venv/
 *.tmp
 *.temp
 ~$*
+.cache/
 
 # Large local audit workbooks
 *.xlsx

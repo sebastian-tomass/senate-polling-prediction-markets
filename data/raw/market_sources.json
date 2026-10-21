@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "2022": {
+      "repository": "tanaerao/polymarket-midterms",
+      "commit": "7adf1aa694d988e892edd0f03fc23b046a38599a",
+      "source_format": "per-market trade CSV",
+      "license_file_at_pinned_commit": null,
+      "redistribution_policy": "upstream_only_not_vendored",
+      "files": [
+        {
+          "state": "Arizona",
+          "path": "polymarket_midterms_data/arizona_senate.csv",
+          "git_blob_sha": "33064d60df8f33d949b18949f7b5482d13d83cd6",
+          "common_support_observations": 4
+        },
+        {
+          "state": "Florida",
+          "path": "polymarket_midterms_data/florida_senate.csv",
+          "git_blob_sha": "1759771a1cea797cc0aff76fab1d77ee9c8e0ea5",
+          "common_support_observations": 4
+        },
+        {
+          "state": "Iowa",
+          "path": "polymarket_midterms_data/iowa_senate.csv",
+          "git_blob_sha": "738686d59864a5e10443d85f9c92746a1fc35853",
+          "common_support_observations": 2
+        },
+        {
+          "state": "Nevada",
+          "path": "polymarket_midterms_data/nevada_senate.csv",
+          "git_blob_sha": "243fced92cf13f7e98db7104391f0f6d5ab8526e",
+          "common_support_observations": 4
+        },
+        {
+          "state": "New Hampshire",
+          "path": "polymarket_midterms_data/new_hampshire_senate.csv",
+          "git_blob_sha": "86a6897ce8a03e05c1fa7a3808b426a79b680f18",
+          "common_support_observations": 3
+        },
+        {
+          "state": "North Carolina",
+          "path": "polymarket_midterms_data/north_carolina_senate.csv",
+          "git_blob_sha": "1d2c0ec4cdf3ffd9b6daa9c8586d99d0325cf225",
+          "common_support_observations": 4
+        },
+        {
+          "state": "Ohio",
+          "path": "polymarket_midterms_data/ohio_senate.csv",
+          "git_blob_sha": "d07df34c25879a51af56253243ec9d67c7e82783",
+          "common_support_observations": 4
+        },
+        {
+          "state": "Pennsylvania",
+          "path": "polymarket_midterms_data/pennsylvania_senate.csv",
+          "git_blob_sha": "e0a35d49c0879921e05deb9aad93c53ef32e38cd",
+          "common_support_observations": 4
+        },
+        {
+          "state": "Vermont",
+          "path": "polymarket_midterms_data/vermont_senate.csv",
+          "git_blob_sha": "90e23fa24510a7a7b5857b0cc12253dc06994dcf",
+          "common_support_observations": 1
+        },
+        {
+          "state": "Wisconsin",
+          "path": "polymarket_midterms_data/wisconsin_senate.csv",
+          "git_blob_sha": "f2ab65a3a74b48d254bce1abe4a6a2e5cedcbcbf",
+          "common_support_observations": 4
+        }
+      ]
+    },
+    "2024": {
+      "repository": "jacksonjude/USA-Election-Map-Data",
+      "commit": "f0c6732787c21f5b084a5626f3c558a082239db1",
+      "source_format": "archived Polymarket CLOB prices-history JSON",
+      "request_provenance": {
+        "endpoint": "Polymarket CLOB prices-history",
+        "interval": "max",
+        "fidelity_minutes": 720
+      },
+      "license_file_at_pinned_commit": null,
+      "redistribution_policy": "upstream_only_not_vendored",
+      "files": [
+        {
+          "path": "data/2024-senate-polymarket-prices.json",
+          "git_blob_sha": "23c902a99fc4b92882226f7bd5b28aeaac37840e",
+          "common_support_observations": 60
+        }
+      ]
+    }
+  }
+}

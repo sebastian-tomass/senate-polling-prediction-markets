@@ -97,7 +97,11 @@ where `Phi` is the standard normal CDF.
 
 Prediction-market probabilities are sampled at the same 60/30/14/7-day horizons and expressed as Democratic win probabilities.
 
-The project preserves the frozen market extraction rules used in the audit pipeline rather than re-estimating or smoothing market prices during model fitting.
+For 2022, each target is noon UTC on the horizon cutoff date. The archived trade timestamps have no timezone suffix, so the frozen convention interprets them as UTC. The selected observation is the latest trade at or before the target; when multiple trades share that timestamp, the first physical source row wins. A Democratic contract price is used directly, while a Republican contract price is converted with `1 - price`.
+
+For 2024, the source is an archived Polymarket CLOB `prices-history` response requested with `interval=max` and 720-minute fidelity. The selected point is nearest the scheduled noon UTC target and must be within 60 seconds. In the pinned archive, all 60 selected points occur 2 or 3 seconds after noon. The stored price is already a Democratic probability.
+
+No smoothing, interpolation, averaging or outcome-dependent adjustment is applied. Source files must match their pinned Git blob SHAs before processing. The reconstructed market values are compared with the frozen common-support tables only after selection and normalization.
 
 ## 5. Hybrid model
 
