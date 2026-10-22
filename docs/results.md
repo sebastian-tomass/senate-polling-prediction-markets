@@ -61,12 +61,19 @@ The two forecasts favor the same party in 58 of 60 observations. Their
 probability correlation is 0.973 and their logit correlation is 0.904. The
 only favorite-party disagreements are Ohio at 14 and 7 days.
 
-These results support a narrow conclusion: in this architecture and sample,
-adding the polling probability did not improve the frozen convex ensemble.
-They do not show that polling contains no predictive information. The 2024
-comparison is retrospective, the sample contains only 18 race clusters, and
-the aggregate loss difference remains imprecise. The planned 2026 application
-is the prospective test.
+These results support a deliberately narrow conclusion:
+
+> In the simple convex ensemble tested here, polling and market probabilities
+> could not be meaningfully combined to improve Senate forecasts. They were
+> highly associated, and the 2022 development fit assigned zero positive
+> weight to polling. Markets subsequently had lower 2024 point-estimate
+> probabilistic losses, but uncertainty across 18 races was too large to
+> establish a precise market advantage.
+
+This does not show that polling contains no predictive information, that
+markets always outperform polls, or that market prices contain no polling
+information. The 2024 comparison is retrospective. The planned 2026
+application is the prospective test.
 
 ## Automated checks and presentation outputs
 
