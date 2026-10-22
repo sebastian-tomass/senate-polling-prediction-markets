@@ -290,3 +290,23 @@ python -m unittest discover -s tests -v
 ```
 
 The reconstruction checks **94 observations**. The maximum absolute difference from the committed market probabilities is about `5.55e-17` for 2022 and exactly `0` for 2024. The 2024 observed timestamps also match exactly.
+
+## End-to-end analysis joins
+
+[`run_pipeline.py`](../../src/run_pipeline.py) treats the files in this
+directory as stage-boundary records, not as a shortcut around the upstream
+polling reconstruction:
+
+1. all 98 polling forecasts are regenerated from the poll-usage inputs;
+2. the 34 PRIMARY 2022 and 60 PRIMARY 2024 identifiers define the fixed common
+   support and supply certified outcomes;
+3. regenerated polling probabilities are joined to either the committed,
+   independently verified market probabilities or a fresh
+   `--rebuild-markets` result;
+4. those joined rows, rather than the stored polling-probability columns, feed
+   the 2022 hybrid fit and 2024 evaluation.
+
+The end-to-end tests deliberately perturb a regenerated polling probability
+and confirm that the fit changes and the frozen regression check fails. This
+guards against accidentally scoring a stored output instead of the rebuilt
+forecast.

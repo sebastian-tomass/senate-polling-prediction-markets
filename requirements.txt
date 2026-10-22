@@ -1,6 +1,3 @@
-# Initial analysis stack; versions will be pinned when the reproducible pipeline is added.
-numpy
-pandas
-scipy
-matplotlib
-openpyxl
+# Runtime dependencies for the frozen reproducible pipeline (Python 3.12).
+numpy==2.3.5
+matplotlib==3.10.8
