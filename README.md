@@ -19,6 +19,24 @@ python src/run_pipeline.py
 
 The command deterministically rebuilds calibration, polling forecasts, the 2022 hybrid fit, 2024 scores, clustered bootstrap intervals, tables, and figures. Install the two pinned dependencies first with `python -m pip install -r requirements.txt`.
 
+## Polling pipeline
+
+This is not only a comparison built from downloaded market prices. The most substantial data-engineering component is an independently implemented polling pipeline:
+
+```text
+raw poll rows
+  → pollster identity resolution
+  → vintage-safe reliability estimation
+  → recency, sample-size, and repeat-pollster weighting
+  → race × horizon polling margins
+  → historical-error calibration
+  → Democratic win probabilities
+```
+
+The pipeline reconstructs **7,346 poll usages** and **629 race × horizon polling signals** spanning 2006–2024. Pollster reliability for each election vintage uses only earlier cycles, shrinks sparse pollster histories toward the contemporaneous global mean, and feeds a frozen quality multiplier into the poll-level weights. The resulting historical margins calibrate horizon-specific polling-error distributions before any 2022 or 2024 win probability is generated.
+
+This separation is deliberate: market prices and election outcomes never enter the construction of a polling forecast. The full statistical specification is documented in the [methodology](docs/methodology.md), with the implementation stages and validation checks in the [source guide](src/README.md).
+
 ## Results at a glance
 
 The ensemble is
