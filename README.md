@@ -5,11 +5,11 @@
 
 **Question:** Can polling and prediction markets be meaningfully combined to improve U.S. Senate election forecasts?
 
-**What I built:** An end-to-end forecasting pipeline that reconstructs a quality-weighted polling model, aligns it with prediction-market probabilities at four pre-election horizons, learns a simple ensemble on 2022 races, and evaluates the frozen rule on 2024 races.
+This is an end-to-end forecasting pipeline that reconstructs a polling model weighted by pollster quality, aligns it with prediction-market probabilities at four pre-election horizons, learns a simple ensemble on 2022 races, and evaluates the frozen rule on 2024 races.
 
-**Headline result:** In the simple convex ensemble tested here, **no**. The 2022 development fit assigned zero positive weight to polling. Prediction markets then had lower 2024 point-estimate Brier score and log loss, although uncertainty across 18 races was too large to establish a precise market advantage.
+**Main Result:** In the ensemble tested here, the answer is no. The 2022 development fit assigned zero positive weight to polling. Prediction markets then had lower 2024 point-estimate Brier score and log loss, although uncertainty across 18 races was too large to establish a precise market advantage.
 
-**Why it matters:** Polling and market forecasts were highly associated—0.973 probability correlation and agreement on the favored party in 58 of 60 observations. In this setting, combining two forecasts that largely contained the same signal did not improve predictive performance.
+Polling and market forecasts were highly associated: 0.973 probability correlation and agreement on the favored party in 58 of 60 observations. In this setting, combining two forecasts that largely contained the same signal did not improve predictive performance.
 
 **Reproduce the complete analysis:**
 
@@ -21,7 +21,7 @@ The command deterministically rebuilds calibration, polling forecasts, the 2022 
 
 ## Polling pipeline
 
-This is not only a comparison built from downloaded market prices. The most substantial data-engineering component is an independently implemented polling pipeline:
+Implemented polling pipeline:
 
 ```text
 raw poll rows
@@ -33,7 +33,7 @@ raw poll rows
   → Democratic win probabilities
 ```
 
-The pipeline reconstructs **7,346 poll usages** and **629 race × horizon polling signals** spanning 2006–2024. Pollster reliability for each election vintage uses only earlier cycles, shrinks sparse pollster histories toward the contemporaneous global mean, and feeds a frozen quality multiplier into the poll-level weights. The resulting historical margins calibrate horizon-specific polling-error distributions before any 2022 or 2024 win probability is generated.
+The pipeline reconstructs 7,346 poll usages and 629 race × horizon polling signals spanning 2006–2024. Pollster reliability for each election vintage uses only earlier cycles, shrinks sparse pollster histories toward the contemporaneous global mean, and feeds a frozen quality multiplier into the poll-level weights. The resulting historical margins calibrate horizon-specific polling-error distributions before any 2022 or 2024 win probability is generated.
 
 This separation is deliberate: market prices and election outcomes never enter the construction of a polling forecast. The full statistical specification is documented in the [methodology](docs/methodology.md), with the implementation stages and validation checks in the [source guide](src/README.md).
 
